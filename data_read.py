@@ -1,3 +1,5 @@
+import struct
+import socket
 import warnings
 import time
 import serial
@@ -59,3 +61,23 @@ serial_obj.close()
 for a_measurement in data:
     print("%.6f" % a_measurement)
 print(len(data))
+
+# Create socket for data transfer through TCP/IP protocol
+# For now we just need to implement one way transfer
+
+HOST = '127.0.0.1'
+PORT = 9090
+socket_incoming_comm_limit = 1
+
+socket_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket_server.bind((HOST, PORT))
+print('Create socket successfully')
+socket_server.listen(socket_incoming_comm_limit)
+socket_client, address_client = socket_server.accept()
+print('Connected by', address_client)
+
+input('Press any key to continue')
+
+for measurement in data:
+    socket_client.sendall(f'{measurement:.6f}'.encode())
+socket_client.close()
