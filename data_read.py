@@ -58,8 +58,8 @@ else:
 serial_obj.close()
 
 # Print out those values and how many of them
-for a_measurement in data:
-    print("%.6f" % a_measurement)
+for measurement in data:
+    print("%.6f" % measurement)
 print(len(data))
 
 # Create socket for data transfer through TCP/IP protocol
