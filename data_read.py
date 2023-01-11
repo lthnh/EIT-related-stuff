@@ -1,3 +1,5 @@
+from datetime import datetime
+import csv
 import socket
 import warnings
 import time
@@ -60,6 +62,12 @@ serial_obj.close()
 for measurement in data:
     print("%.6f" % measurement)
 print(len(data))
+
+# Save data to a .csv file
+date_current: str = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
+file_to_be_written = open(file=date_current, mode='w')
+writer_obj = csv.writer(file_to_be_written)
+writer_obj.writerow(data)
 
 # Create socket for data transfer through TCP/IP protocol
 # For now we just need to implement one way transfer
