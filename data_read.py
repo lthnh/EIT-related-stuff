@@ -24,7 +24,7 @@ time_delay: float = 2.5
 # Wait for the connection to become stable
 time.sleep(time_delay)
 
-number_of_nodes = int(input('Number of EIT nodes: '))
+number_of_nodes = 16
 input('Press any key to continue')
 
 cmd_start: bytes = b'S'
