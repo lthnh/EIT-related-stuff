@@ -23,7 +23,7 @@ def serial_obj_data_string_to_float(serial_data: list[str]) -> list[float]:
     return [float(data) for data in serial_data]
 
 
-def serial_obj_data_into_chunks(serial_data: list[Any], number_of_data_per_frame: int) -> list:
+def serial_obj_data_into_chunks(serial_data: list[Any], number_of_data_per_frame: int) -> list[list[Any]]:
     return [serial_data[i:i+number_of_data_per_frame] for i in range(0, len(serial_data), number_of_data_per_frame)]
 
 
@@ -56,7 +56,7 @@ serial_obj_number_of_data_per_loop: int = number_of_nodes * \
 serial_obj_data_size: int = 9
 serial_obj_received_data: bytes = b''
 cmd_start: bytes = b'S'
-data = list()
+data: list[Any] = list()
 configuration_count: int = 0
 if serial_obj.is_open:
     serial_obj_buffer_reset(serial_obj)
@@ -78,17 +78,22 @@ if serial_obj.is_open:
             serial_obj_received_data = serial_obj.read(
                 serial_obj_expected_number_of_bytes)
             serial_obj.flush()
-        data_temp: list[str] = serial_obj_received_data.decode(
+        data_temp: list[Any] = serial_obj_received_data.decode(
             'ascii').splitlines(keepends=False)
-        data = serial_obj_data_into_chunks(serial_obj_data_string_to_float(
-            data_temp), number_of_data_per_frame=serial_obj_number_of_data_per_loop)
+        if number_of_loops > 1:
+            data_temp = serial_obj_data_into_chunks(
+                serial_data=data_temp, number_of_data_per_frame=serial_obj_number_of_data_per_loop)
+            for i in range(number_of_loops):
+                data.append(serial_obj_data_string_to_float(data_temp[i]))
+        else:
+            data.append(serial_obj_data_string_to_float(serial_data=data_temp))
 
         # Print out those values and how many of them
-        for i in range(number_of_loops):
-            data[i].insert(0, str(configuration_count) + '.' + str(i+1))
-            for measurement in data[i][1:]:
+        for i in range(configuration_count, configuration_count + number_of_loops):
+            data[i-1].insert(0, str(configuration_count) + '.' + str(i-1))
+            for measurement in data[i-1][1:]:
                 print("%.6f" % measurement)
-            print(len(data[i]) - 1)  # Number of measurement each loop
+            print(len(data[i-1]) - 1)  # Number of measurement each loop
         print(len(data))  # Number of loops
 else:
     raise IOError('Port isn\'t open')
