@@ -1,3 +1,4 @@
+from typing import Any
 from datetime import datetime
 import csv
 import socket
@@ -5,6 +6,26 @@ import warnings
 import time
 import serial
 import serial.tools.list_ports
+
+
+def serial_obj_buffer_reset(serial_obj: serial.Serial) -> None:
+    if serial_obj.in_waiting > 0:
+        serial_obj.reset_input_buffer()
+    if serial_obj.out_waiting > 0:
+        serial_obj.reset_output_buffer()
+
+
+def serial_obj_bytes_string_from_int(number: int) -> bytes:
+    return bytes(str(number) + '\n', 'ascii')
+
+
+def serial_obj_data_string_to_float(serial_data: list[str]) -> list[float]:
+    return [float(data) for data in serial_data]
+
+
+def serial_obj_data_into_chunks(serial_data: list[Any], number_of_data_per_frame: int) -> list:
+    return [serial_data[i:i+number_of_data_per_frame] for i in range(0, len(serial_data), number_of_data_per_frame)]
+
 
 ports_arduino = [
     port.device
@@ -26,42 +47,51 @@ time_delay: float = 2.5
 # Wait for the connection to become stable
 time.sleep(time_delay)
 
-number_of_nodes = int(input('Number of EIT nodes: '))
-input('Press any key to continue')
-
-cmd_start: bytes = b'S'
+number_of_nodes: int = int(input('Number of EIT nodes: '))
+serial_obj_number_of_data_per_loop: int = number_of_nodes * \
+    (number_of_nodes - 3)
 # A single measurement takes up to 6 digits behind decimal place.
 # Plus '0', '.' and '\n' result in 9 bytes total.
 # Result in the following data size
 serial_obj_data_size: int = 9
-serial_obj_number_of_data: int = number_of_nodes * (number_of_nodes - 3)
-serial_obj_expected_number_of_bytes: int = serial_obj_data_size * \
-    serial_obj_number_of_data
 serial_obj_received_data: bytes = b''
-data: list[float] = list()
+cmd_start: bytes = b'S'
+data = list()
+configuration_count: int = 0
 if serial_obj.is_open:
-    if serial_obj.in_waiting > 0:
-        serial_obj.reset_input_buffer()
-    if serial_obj.out_waiting > 0:
-        serial_obj.reset_output_buffer()
-    serial_obj.write(cmd_start)
-    time.sleep(time_delay)
-    if serial_obj.in_waiting > 0:
-        serial_obj_received_data = serial_obj.read(
-            serial_obj_expected_number_of_bytes)
-        serial_obj.flush()
-    data_temp: list[str] = serial_obj_received_data.decode(
-        'ascii').splitlines(keepends=False)
-    data = [float(measurement) for measurement in data_temp]
+    serial_obj_buffer_reset(serial_obj)
+    serial_obj.write(serial_obj_bytes_string_from_int(number_of_nodes))
+    while True:
+        serial_obj_buffer_reset(serial_obj)
+        number_of_loops = int(input('Number of loops: '))
+        if number_of_loops == 0:
+            serial_obj.close()
+            break
+        configuration_count += 1
+        serial_obj_number_of_data: int = serial_obj_number_of_data_per_loop * number_of_loops
+        serial_obj_expected_number_of_bytes: int = serial_obj_data_size * \
+            serial_obj_number_of_data
+        serial_obj.write(serial_obj_bytes_string_from_int(number_of_loops))
+        serial_obj.write(cmd_start)
+        time.sleep(time_delay)
+        if serial_obj.in_waiting > 0:
+            serial_obj_received_data = serial_obj.read(
+                serial_obj_expected_number_of_bytes)
+            serial_obj.flush()
+        data_temp: list[str] = serial_obj_received_data.decode(
+            'ascii').splitlines(keepends=False)
+        data = serial_obj_data_into_chunks(serial_obj_data_string_to_float(
+            data_temp), number_of_data_per_frame=serial_obj_number_of_data_per_loop)
+
+        # Print out those values and how many of them
+        for i in range(number_of_loops):
+            data[i].insert(0, str(configuration_count) + '.' + str(i+1))
+            for measurement in data[i][1:]:
+                print("%.6f" % measurement)
+            print(len(data[i]) - 1)  # Number of measurement each loop
+        print(len(data))  # Number of loops
 else:
     raise IOError('Port isn\'t open')
-
-serial_obj.close()
-
-# Print out those values and how many of them
-for measurement in data:
-    print("%.6f" % measurement)
-print(len(data))
 
 # Save data to a .csv file
 date_current: str = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
