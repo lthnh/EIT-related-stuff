@@ -94,14 +94,18 @@ else:
     raise IOError('Port isn\'t open')
 
 # Save data to a .csv file
-date_current: str = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
-file_to_be_written = open(file=date_current, mode='w')
+data_author: str = input('Operator\'s name: ')
+data_date_current: str = datetime.now().strftime("%d.%m.%Y")
+file_name: str = data_author + '_' + data_date_current + '.csv'
+file_to_be_written = open(file=file_name, mode='w', newline='')
 writer_obj = csv.writer(file_to_be_written)
-writer_obj.writerow(data)
+data_cols = [str(i) for i in range(serial_obj_number_of_data_per_loop)]
+data_cols.insert(0, 'nth data')
+writer_obj.writerow(data_cols)
+writer_obj.writerows(data)
 
 # Create socket for data transfer through TCP/IP protocol
 # For now we just need to implement one way transfer
-
 HOST = '127.0.0.1'
 PORT = 9090
 socket_incoming_comm_limit = 1
@@ -115,6 +119,7 @@ print('Connected by', address_client)
 
 input('Press any key to continue')
 
-for measurement in data:
-    socket_client.sendall(f'{measurement:.6f}'.encode())
+for i in range(number_of_loops):
+    for measurement in data[i][1:]:
+        socket_client.sendall(f'{measurement:.6f}'.encode())
 socket_client.close()
