@@ -37,7 +37,7 @@ if not ports_arduino:
 if len(ports_arduino) > 1:
     warnings.warn('Multiple Arduino found - using the first')
 
-serial_obj_baud: int = int(input('Baudrate: '))
+serial_obj_baud: int = 115200
 serial_obj_timeout = None if (
     input_user := input('Timeout: ')) == '' else float(input_user)
 serial_obj = serial.Serial(
