@@ -90,7 +90,10 @@ if serial_obj.is_open:
 
         # Print out those values and how many of them
         for i in range(configuration_count, configuration_count + number_of_loops):
-            data[i-1].insert(0, str(configuration_count) + '.' + str(i-1))
+            if number_of_loops > 1:
+                data[i-1].insert(0, str(configuration_count) + '.' + str(i - configuration_count + 1))
+            else:
+                data[i-1].insert(0, str(configuration_count))
             for measurement in data[i-1][1:]:
                 print("%.6f" % measurement)
             print(len(data[i-1]) - 1)  # Number of measurement each loop
