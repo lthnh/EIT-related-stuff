@@ -64,7 +64,7 @@ void cycle() {
 
 float *measurementProcessing(CD74HC4067 src1, CD74HC4067 src2, CD74HC4067 volmtr1,
                         CD74HC4067 volmtr2, int node, float *measures) {
-  // Đo dùng 2 node liền kề nha
+  // Đo dùng 2 node liền kề nhau
   src1.channel(measurementNodeWrapAround(node));
   src2.channel(measurementNodeWrapAround(node + 1));
 
