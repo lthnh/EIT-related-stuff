@@ -63,8 +63,11 @@ if serial_obj.is_open:
     serial_obj.write(serial_obj_bytes_string_from_int(number_of_nodes))
     while True:
         serial_obj_buffer_reset(serial_obj)
-        number_of_loops = int(input('Number of loops: '))
-        if number_of_loops == 0:
+        try:
+            number_of_loops = int(input('Number of loops: '))
+        except ValueError:
+            number_of_loops = 0
+        if number_of_loops < 1:
             serial_obj.close()
             break
         configuration_count += 1
