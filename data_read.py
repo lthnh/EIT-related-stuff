@@ -1,7 +1,6 @@
 from typing import Any
 from datetime import datetime
 import csv
-import socket
 import warnings
 import time
 import serial
@@ -37,9 +36,11 @@ if not ports_arduino:
 if len(ports_arduino) > 1:
     warnings.warn('Multiple Arduino found - using the first')
 
+# serial_obj_baud: int = int(input('Baudrate: '))
 serial_obj_baud: int = 115200
-serial_obj_timeout = None if (
-    input_user := input('Timeout: ')) == '' else float(input_user)
+serial_obj_timeout = None
+# serial_obj_timeout = None if (
+#    input_user := input('Timeout: ')) == '' else float(input_user)
 serial_obj = serial.Serial(
     port=ports_arduino[0], baudrate=serial_obj_baud, timeout=serial_obj_timeout)
 
@@ -47,7 +48,7 @@ time_delay: float = 2.5
 # Wait for the connection to become stable
 time.sleep(time_delay)
 
-number_of_nodes: int = 16
+number_of_nodes: int = int(input('Number of EIT nodes: '))
 serial_obj_number_of_data_per_loop: int = number_of_nodes * \
     (number_of_nodes - 3)
 # A single measurement takes up to 6 digits behind decimal place.
@@ -94,32 +95,13 @@ else:
     raise IOError('Port isn\'t open')
 
 # Save data to a .csv file
-data_author: str = input('Operator\'s name: ')
-data_date_current: str = datetime.now().strftime("%d.%m.%Y")
-file_name: str = data_author + '_' + data_date_current + '.csv'
-file_to_be_written = open(file=file_name, mode='w', newline='')
-writer_obj = csv.writer(file_to_be_written)
-data_cols = [str(i) for i in range(serial_obj_number_of_data_per_loop)]
-data_cols.insert(0, 'nth data')
-writer_obj.writerow(data_cols)
-writer_obj.writerows(data)
-
-# Create socket for data transfer through TCP/IP protocol
-# For now we just need to implement one way transfer
-HOST = '127.0.0.1'
-PORT = 9090
-socket_incoming_comm_limit = 1
-
-socket_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket_server.bind((HOST, PORT))
-print('Create socket successfully')
-socket_server.listen(socket_incoming_comm_limit)
-socket_client, address_client = socket_server.accept()
-print('Connected by', address_client)
-
-input('Press any key to continue')
-
-for i in range(number_of_loops):
-    for measurement in data[i][1:]:
-        socket_client.sendall(f'{measurement:.6f}'.encode())
-socket_client.close()
+if input('Do you want to save this session? [y,n] ') == 'y':
+    data_author: str = input('Operator\'s name: ')
+    data_date_current: str = datetime.now().strftime("%d.%m.%Y")
+    file_name: str = data_author + '_' + data_date_current + '.csv'
+    file_to_be_written = open(file=file_name, mode='w', newline='')
+    writer_obj = csv.writer(file_to_be_written)
+    data_cols = [str(i) for i in range(serial_obj_number_of_data_per_loop)]
+    data_cols.insert(0, 'nth data')
+    writer_obj.writerow(data_cols)
+    writer_obj.writerows(data)
