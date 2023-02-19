@@ -36,9 +36,9 @@ if not ports_arduino:
 if len(ports_arduino) > 1:
     warnings.warn('Multiple Arduino found - using the first')
 
-# serial_obj_baud: int = int(input('Baudrate: '))
 serial_obj_baud: int = 115200
 serial_obj_timeout = None
+# serial_obj_baud: int = int(input('Baudrate: '))
 # serial_obj_timeout = None if (
 #    input_user := input('Timeout: ')) == '' else float(input_user)
 serial_obj = serial.Serial(
@@ -49,8 +49,7 @@ time_delay: float = 2.5
 time.sleep(time_delay)
 
 number_of_nodes: int = int(input('Number of EIT nodes: '))
-serial_obj_number_of_data_per_loop: int = number_of_nodes * \
-    (number_of_nodes - 3)
+serial_obj_number_of_data_per_loop: int = pow(number_of_nodes, 2)
 # A single measurement takes up to 6 digits behind decimal place.
 # Plus '0', '.' and '\n' result in 9 bytes total.
 # Result in the following data size
