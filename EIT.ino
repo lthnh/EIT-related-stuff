@@ -20,8 +20,8 @@ int registerData = 0;
 
 // 1 con mux chỉ có 8 chân
 Rms readRms;
-CD74HC4067 muxSourcePositive1(22, 23, 24, 25);
 // Khai báo chân s0 s1 s2 s3 trên mux
+CD74HC4067 muxSourcePositive1(22, 23, 24, 25);
 CD74HC4067 muxSourceNegative1(26, 27, 28, 29);
 CD74HC4067 muxVoltMeter11(30, 31, 32, 33);
 CD74HC4067 muxVoltMeter12(34, 35, 36, 37);
