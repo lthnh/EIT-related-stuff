@@ -56,8 +56,9 @@ serial_obj_number_of_data_per_loop: int = pow(number_of_nodes, 2)
 serial_obj_data_size: int = 9
 serial_obj_received_data: bytes = b''
 cmd_start: bytes = b'S'
-data = list()
+data: list[list[Any]] = list()
 configuration_count: int = 0
+number_of_loops_total: int = 0
 if serial_obj.is_open:
     serial_obj_buffer_reset(serial_obj)
     serial_obj.write(serial_obj_bytes_string_from_int(number_of_nodes))
@@ -71,6 +72,7 @@ if serial_obj.is_open:
             serial_obj.close()
             break
         configuration_count += 1
+        number_of_loops_total += number_of_loops
         serial_obj_number_of_data: int = serial_obj_number_of_data_per_loop * number_of_loops
         serial_obj_expected_number_of_bytes: int = serial_obj_data_size * \
             serial_obj_number_of_data
@@ -83,12 +85,14 @@ if serial_obj.is_open:
             serial_obj.flush()
         data_temp: list[str] = serial_obj_received_data.decode(
             'ascii').splitlines(keepends=False)
-        data = serial_obj_data_into_chunks(serial_obj_data_string_to_float(
-            data_temp), number_of_data_per_frame=serial_obj_number_of_data_per_loop)
+        data.extend(serial_obj_data_into_chunks(serial_obj_data_string_to_float(
+            data_temp), number_of_data_per_frame=serial_obj_number_of_data_per_loop))
 
         # Print out those values and how many of them
-        for i in range(number_of_loops):
-            data[i].insert(0, str(configuration_count) + '.' + str(i+1))
+        nth_loop: int = 1 # The nth loop for a configuration
+        for i in range(number_of_loops_total - number_of_loops, number_of_loops_total):
+            data[i].insert(0, str(configuration_count) + '.' + str(nth_loop))
+            nth_loop += 1
             for measurement in data[i][1:]:
                 print("%.6f" % measurement)
             print(len(data[i]) - 1)  # Number of measurement each loop
