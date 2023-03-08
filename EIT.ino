@@ -5,6 +5,8 @@
 #define RMS_WINDOW 100 // 40 mẫu, 2 khoảng thời gian ở 50HZ
 #define TERMINATOR '\n' // Có thể cần nếu sau này đọc dữ liệu từ string
 #define MUX_NUM_OF_OUTPUT_PINS 8 // Số chân của một con mux
+#define MUX_ENABLE_PIN 2 // Chân EN của MUX nối với pin 2 của Arduino Due (Arm)
+#define MUX_DELAY_PERIOD 200
 
 typedef struct muxDual {
   CD74HC4067 *mux1; // Khi là nguồn dòng mux1 là source
@@ -72,6 +74,8 @@ void setup() {
     muxVoltMeter[31].mux1 = &muxVoltMeter21;
     muxVoltMeter[31].mux2 = &muxVoltMeter12;
   }
+
+  pinMode(MUX_ENABLE_PIN, OUTPUT);
 }
 
 void loop() {
@@ -95,6 +99,8 @@ void serialFlushIncomingBuffer(void) { Serial.readStringUntil(TERMINATOR); }
 
 void cycle() {
   if (nodeNumber == 16) {
+    digitalWrite(MUX_ENABLE_PIN, HIGH);
+    delay(MUX_DELAY_PERIOD);
     readRms.begin(voltageRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
     readRms.start();
     for (int i = 0; i < loopNumber; i++) {
@@ -103,6 +109,8 @@ void cycle() {
                               muxVoltMeter11, muxVoltMeter12, j);
       }
     }
+    delay(MUX_DELAY_PERIOD);
+    digitalWrite(MUX_ENABLE_PIN, LOW);
   }
 
   if (nodeNumber == 32) {
